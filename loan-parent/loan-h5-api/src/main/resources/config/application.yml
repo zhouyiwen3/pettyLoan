@@ -1,0 +1,38 @@
+server.port: 9091
+
+# 日志
+logging:
+  path: D:/log
+  level.com.ps.controller: debug
+  level.com.ps.service: info
+
+
+# mapper文件位置
+mybatis:
+  mapper-locations: /mapper/**/*.xml
+
+
+# 身份证、银行卡图片存放路径
+filePath:
+  name: E:\reference_material\xiao\小额贷款项目\images\
+
+# 资产评估url（端口请自行修改）
+estimate_url: http://localhost:9000/valuation
+
+# 支付url（端口请自行修改）
+repay_url: http://localhost:9000/prePay
+
+
+# 七牛云配置
+qiniu:
+  # 秘钥
+  AccessKey: Texb5IIqx0RQqovyHvckV3a1VmNpsoqzWdh0zXp8
+  SecretKey: oZlqmycKWZk70m3nNbFoOx5-II9sSWz2mvFsusdp
+  # 空间名
+  Bucket: zyw
+  # 域名
+  cdn.prefix: http://pud6t6jk0.bkt.clouddn.com/
+
+zookeeper:
+  host: 127.0.0.1:2181
+  configRootName: /config/a_sys

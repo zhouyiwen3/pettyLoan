@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ps.mapper.AdminMapper">
+
+
+    <resultMap id="queryRepaymentInfoResultMap" type="com.ps.domain.Repayment">
+        <id property="id" column="id"></id>
+        <result property="repayment_money" column="repayment_money" />
+        <result property="repayment_time" column="repayment_time" />
+        <result property="repayment_type" column="repayment_type" />
+        <result property="borrow.id" column="borrow_id" />
+    </resultMap>
+
+
+    <resultMap id="queryBorrowInfoAllResultMap" type="com.ps.domain.Borrow">
+        <id property="id" column="id" />
+        <result property="borrow_money" column="borrow_money" />
+        <result property="borrow_number" column="borrow_number" />
+        <result property="borrow_time" column="borrow_time" />
+        <result property="audit_status" column="audit_status" />
+        <result property="user.name" column="name" />
+        <result property="user.iphone" column="iphone" />
+    </resultMap>
+
+
+    <resultMap id="queryRepaymentInfosAllResultMap" type="com.ps.domain.Repayment">
+        <id property="id" column="id" />
+        <result property="repayment_money" column="repayment_money" />
+        <result property="repayment_time" column="repayment_time" />
+        <result property="actual_repayment_time" column="actual_repayment_time" />
+        <result property="repayment_type" column="repayment_type" />
+        <result property="borrow.user.name" column="name" />
+        <result property="borrow.user.iphone" column="iphone" />
+    </resultMap>
+
+    <!--修改借款申请的审核状态-->
+    <update id="updateBorrowAuditStatus">
+        UPDATE borrow_money_t SET audit_status=#{audit_status} WHERE id=#{id}
+    </update>
+
+
+    <!--查询借款信息-->
+    <select id="queryBorrowInfo" resultType="com.ps.domain.Borrow">
+        select
+          id,
+          borrow_money,
+          borrow_number,
+          date_format(borrow_time,'%Y-%m-%d %H:%i:%S') borrow_time,
+          total_interest,
+          audit_status
+        from borrow_money_t
+        where id=#{id}
+    </select>
+
+
+    <!--将还款计划添加到数据库中-->
+    <insert id="addRepaymentInfo">
+        insert into repayment_t(id,repayment_money,repayment_time,repayment_type,borrow_id)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            ((select ifnull(max(r.id),0)+1 from repayment_t r),#{item.repayment_money},#{item.repayment_time},1,#{item.borrow.id})
+        </foreach>
+    </insert>
+
+
+    <!--修改用户审核状态-->
+    <update id="updateUserAuditStatus">
+        update user_t set audit_status=#{audit_status} where id=#{id}
+    </update>
+
+
+    <!--设置利息-->
+    <update id="setUpInterest">
+        update config_t set interest=#{interest} where id=1
+    </update>
+
+
+    <!---->
+    <select id="queryRepaymentInfoById" resultMap="queryRepaymentInfoResultMap">
+        select id,repayment_money,repayment_time,repayment_type,borrow_id from repayment_t where id=#{id}
+    </select>
+
+
+    <!---->
+    <select id="queryUserInfoByBorrowId" resultType="com.ps.domain.User">
+        SELECT
+            u.id,
+            u.name,
+            u.iphone,
+            u.identity_card
+        FROM
+            borrow_money_t b
+        LEFT JOIN user_t u ON b.user_id = u.id
+    </select>
+
+
+    <!--添加催收表-->
+    <insert id="addCollectionInfo">
+        insert into collection_t(id,repayment_id,collection_time) values((select ifnull(max(c.id),0)+1 from collection_t c), #{id}, now())
+    </insert>
+
+
+    <!--查询所有用户信息-->
+    <select id="queryUserInfos" resultType="com.ps.domain.User">
+        SELECT
+            id,
+            name,
+            PASSWORD,
+            iphone,
+            identity_card,
+            regist_time,
+            opening_bank,
+            bank_card,
+            quota,
+            audit_status
+        FROM
+            user_t
+    </select>
+
+
+    <!--查询所有借款信息-->
+    <select id="queryBorrowInfoAll" resultMap="queryBorrowInfoAllResultMap">
+        SELECT
+            b.id,
+            b.borrow_money,
+            b.borrow_number,
+            DATE_FORMAT(b.borrow_time,'%Y-%m-%d %H:%i:%S') borrow_time,
+          b.audit_status,
+            u.name,
+            u.iphone
+        FROM
+            borrow_money_t b
+        LEFT JOIN user_t u ON u.id = b.user_id
+        ORDER BY id ASC
+    </select>
+
+
+    <!--查询所有还款信息-->
+    <select id="queryRepaymentInfosAll" resultMap="queryRepaymentInfosAllResultMap">
+        SELECT
+            r.id,
+            r.repayment_money,
+            DATE_FORMAT(r.repayment_time, '%Y-%m-%d %H:%i:%S') repayment_time,
+            DATE_FORMAT(r.actual_repayment_time,'%Y-%m-%d %H:%i:%S') actual_repayment_time,
+            r.repayment_type,
+            u.name,
+            u.iphone
+        FROM
+            repayment_t r
+        LEFT JOIN borrow_money_t b ON b.id = r.borrow_id
+        LEFT JOIN user_t u on u.id=b.user_id
+    </select>
+
+
+    <!--查询所有待还款，已逾期的还款计划-->
+    <select id="queryRepaymentInfosByType" resultMap="queryRepaymentInfosAllResultMap">
+        SELECT
+            r.id,
+            r.repayment_money,
+            DATE_FORMAT(r.repayment_time, '%Y-%m-%d %H:%i:%S') repayment_time,
+            DATE_FORMAT(r.actual_repayment_time,'%Y-%m-%d %H:%i:%S') actual_repayment_time,
+            r.repayment_type,
+            u.name,
+            u.iphone
+        FROM
+            repayment_t r
+        LEFT JOIN borrow_money_t b ON b.id = r.borrow_id
+        LEFT JOIN user_t u on u.id=b.user_id
+        WHERE r.repayment_type in(2,4)
+    </select>
+
+
+    <!--查询利息-->
+    <select id="queryInterestConfig" resultType="bigdecimal">
+        select interest from config_t where id=1
+    </select>
+    
+    
+    <!--查询收款明细-->
+    <select id="queryDetailReceipts" resultMap="queryRepaymentInfosAllResultMap">
+        SELECT
+            r.id,
+            r.repayment_money,
+            r.repayment_time,
+            r.repayment_type,
+            r.actual_repayment_time,
+            u.name,
+            u.iphone
+        FROM
+            repayment_t r
+        LEFT JOIN borrow_money_t b ON b.id = r.borrow_id
+        LEFT JOIN user_t u ON u.id = b.user_id
+        where r.repayment_type in(2,3,4)
+    </select>
+
+</mapper>

@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ps.mapper.BorrowMapper">
+
+
+    <resultMap id="queryBorrowInfoResultMap" type="com.ps.domain.Borrow">
+        <id property="id" column="id"></id>
+        <result property="borrow_money" column="borrow_money"></result>
+        <result property="borrow_time" column="borrow_time"></result>
+        <result property="borrow_number" column="borrow_number"></result>
+        <result property="audit_status" column="audit_status"></result>
+        <result property="total_interest" column="total_interest"></result>
+        <association property="user" javaType="com.ps.domain.User">
+            <id property="id" column="user_id"></id>
+        </association>
+    </resultMap>
+
+
+    <resultMap id="queryNotRepaymentInfoResultMap" type="com.ps.domain.Repayment">
+        <id property="id" column="id" />
+        <result property="repayment_money" column="repayment_money" />
+        <result property="repayment_time" column="repayment_time" />
+        <result property="repayment_type" column="repayment_type" />
+        <result property="actual_repayment_time" column="actual_repayment_time" />
+        <result property="borrow.id" column="borrow_id" />
+    </resultMap>
+
+
+    <!--查询用户信息-->
+    <select id="queryUserInfoById" resultType="com.ps.domain.User">
+        select
+          id,
+          name,
+          password,
+          iphone,
+          identity_card,
+          regist_time,
+          opening_bank,
+          bank_card,
+          identity_card_before_img,
+          identity_card_after_img,
+          bank_img,
+          quota,
+          audit_status
+        from user_t
+        where id=#{id}
+    </select>
+
+
+    <!--查询用户当前月所借金额-->
+    <select id="queryBorrowMoneyById" resultMap="queryBorrowInfoResultMap">
+      SELECT
+        id,
+        borrow_money,
+        borrow_time,
+        borrow_number,
+        user_id,
+        audit_status,
+        total_interest
+      FROM
+        borrow_money_t
+      WHERE
+        user_id = #{id}
+      AND DATE_FORMAT(borrow_time, '%Y-%m') = #{month}
+      ORDER BY
+        borrow_time DESC
+      LIMIT 0, 1
+    </select>
+
+
+    <!--查询借款表最大的id-->
+    <select id="queryMaxId" resultType="java.lang.Integer">
+        select ifnull(max(id),0) from borrow_money_t
+    </select>
+
+
+    <!--添加借款信息到数据库-->
+    <insert id="addBorrowInfo">
+      INSERT INTO borrow_money_t (
+        id,
+        borrow_money,
+        borrow_time,
+        borrow_number,
+        user_id,
+        total_interest,
+        audit_status
+      )
+      VALUES
+        (#{id}, #{borrow_money}, now(), #{borrow_number}, #{user.id}, (select (c.interest * #{borrow_money}) from config_t c where c.id=1), 0)
+    </insert>
+
+
+    <!--修改该用户的已借款金额-->
+    <update id="updateBorrowInfoMoney">
+        update
+          borrow_money_t
+        set
+          borrow_money=borrow_money+#{borrow_money},
+          audit_status=0
+        where id=#{id}
+    </update>
+
+
+    <!--根据借款id查询未还款的还款计划-->
+    <select id="queryNotRepaymentInfo" resultMap="queryNotRepaymentInfoResultMap">
+        SELECT
+            id,
+            repayment_money,
+            repayment_time,
+            repayment_type,
+            actual_repayment_time,
+            borrow_id
+        FROM
+            repayment_t
+        WHERE
+            borrow_id = #{id}
+        AND repayment_type IN (1, 2, 4)
+    </select>
+
+
+    <!--查询用户最后一次借款信息-->
+    <select id="queryBorrowInfoByTime" resultMap="queryBorrowInfoResultMap">
+        SELECT
+            id,
+            borrow_money,
+            borrow_time,
+            borrow_number,
+            user_id,
+            audit_status,
+            total_interest
+        FROM
+          borrow_money_t
+        WHERE
+          user_id = #{id}
+        ORDER BY
+          borrow_time DESC
+        LIMIT 0, 1
+    </select>
+
+</mapper>

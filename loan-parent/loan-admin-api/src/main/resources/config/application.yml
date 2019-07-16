@@ -1,0 +1,37 @@
+server.port: 9090
+
+spring:
+  # 连接数据库
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/petty_loan
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+  servlet:
+    multipart:
+      max-file-size: 10485760
+      max-request-size: 104857600
+
+
+# 日志
+logging:
+  path: D:/log
+  level.com.ps.controller: debug
+  level.com.ps.service: info
+
+
+# mapper文件位置
+mybatis:
+  mapper-locations: /mapper/**/*.xml
+
+
+# 身份证、银行卡图片存放路径
+filePath:
+  name: E:\reference_material\xiao\小额贷款项目\images\
+
+
+# 催收url（端口请自行修改）
+collection_url: http://localhost:9000/debt
+
+

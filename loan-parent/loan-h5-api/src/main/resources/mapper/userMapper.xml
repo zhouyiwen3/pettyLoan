@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ps.mapper.UserMapper">
+
+    <!--判断手机号是否已经存在-->
+    <select id="isExistIphone" resultType="com.ps.domain.User">
+        select * from user_t where iphone=#{iphone}
+    </select>
+
+
+    <!--查询验证码-->
+    <select id="queryCodeByUserId" resultType="java.lang.String">
+        select short_message from short_message_t where id=#{id} and type=#{type}
+    </select>
+
+
+    <!--根据用户ID查询用户信息-->
+    <select id="queryUserById" resultType="com.ps.domain.User">
+        select
+          id,
+          name,
+          password,
+          iphone,
+          identity_card,
+          regist_time,
+          opening_bank,
+          bank_card,
+          identity_card_before_img,
+          identity_card_after_img,
+          bank_img,
+          quota,
+          audit_status
+        from user_t
+        where id=#{id}
+    </select>
+
+
+    <!--获取表中最大的id-->
+    <select id="queryMaxId" resultType="java.lang.Integer">
+        SELECT max(id) FROM short_message_t
+    </select>
+
+
+    <!--将验证码添加到数据库中-->
+    <insert id="addShortCode">
+        insert into short_message_t(id, short_message, type) values(#{id}, #{code}, #{type})
+    </insert>
+
+
+    <!--根据id查询出验证码-->
+    <select id="isTrueByCode" resultType="java.lang.String">
+        select short_message from short_message_t where id=#{id}
+    </select>
+
+
+    <!--添加用户-->
+    <insert id="addUserInfo" parameterType="com.ps.domain.User">
+        insert into user_t(id,password,iphone,regist_time) values(#{id},#{password},#{iphone},now())
+    </insert>
+
+
+    <!--将用户ID添加到短信表中-->
+    <update id="addShortUserId">
+        update short_message_t set user_id=#{userId} where id=#{id}
+    </update>
+
+
+    <!--编辑个人资料-->
+    <update id="updateUserInfoById" parameterType="com.ps.domain.User">
+        UPDATE user_t
+        SET
+         name = #{name},
+         identity_card = #{identity_card},
+         opening_bank = #{opening_bank},
+         bank_card = #{bank_card}
+        WHERE
+            id = #{id}
+    </update>
+
+
+    <!--将图片添加到用户表中（根据用户id修改用户表中的身份证图片和银行卡图片）-->
+    <update id="updateImg">
+        update user_t
+        set
+          identity_card_before_img=#{identity_card_before_img},
+          identity_card_after_img=#{identity_card_after_img},
+          bank_img=#{bank_img},
+          audit_status=0
+        where id=#{id}
+    </update>
+
+
+    <!--查询用户的身份证号-->
+    <select id="queryIdentityCard" resultType="java.lang.String">
+        select identity_card from user_t where id=#{id}
+    </select>
+
+
+    <update id="addMoney">
+        update user_t set quota=#{money} where identity_card=#{idcard}
+    </update>
+
+
+    <!--查询用户表最大的ID-->
+    <select id="queryUserMaxId" resultType="java.lang.Integer">
+        select IFNULL(max(id)+1,1) from user_t
+    </select>
+
+</mapper>

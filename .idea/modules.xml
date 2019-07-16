@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/loan-parent/loan-admin-api/loan-admin-api.iml" filepath="$PROJECT_DIR$/loan-parent/loan-admin-api/loan-admin-api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/loan-parent/loan-all/loan-all.iml" filepath="$PROJECT_DIR$/loan-parent/loan-all/loan-all.iml" />
+      <module fileurl="file://$PROJECT_DIR$/loan-parent/loan-h5-api/loan-h5-api.iml" filepath="$PROJECT_DIR$/loan-parent/loan-h5-api/loan-h5-api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/loan-parent/loan-parent.iml" filepath="$PROJECT_DIR$/loan-parent/loan-parent.iml" />
+    </modules>
+  </component>
+</project>

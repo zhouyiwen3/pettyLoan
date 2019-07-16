@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ps.mapper.RepaymentMapper">
+    
+    
+    <resultMap id="queryRepaymentsResultMap" type="com.ps.domain.Repayment">
+        <id property="id" column="id" />
+        <result property="repayment_money" column="repayment_money" />
+        <result property="repayment_time" column="repayment_time" />
+        <result property="actual_repayment_time" column="actual_repayment_time" />
+        <result property="repayment_type" column="repayment_type" />
+        <result property="borrow.id" column="borrow_id" />
+        <result property="borrow.borrow_time" column="borrow_time" />
+        <result property="borrow.borrow_money" column="borrow_money" />
+    </resultMap>
+    
+
+    <!--查询还款计划-->
+    <select id="queryRepayments" resultMap="queryRepaymentsResultMap">
+        SELECT
+            r.id,
+            r.repayment_money,
+            r.repayment_time,
+            r.actual_repayment_time,
+            r.repayment_type,
+            r.borrow_id,
+            b.borrow_time,
+            b.borrow_money
+        FROM
+            repayment_t r
+        LEFT JOIN borrow_money_t b ON b.id = r.borrow_id
+        WHERE
+            borrow_id = #{id}
+    </select>
+
+
+    <!--查询最早未还款的订单-->
+    <select id="queryRepaymentByBorrowId" resultType="com.ps.domain.Repayment">
+        SELECT
+            id,
+            repayment_money,
+            repayment_time,
+            repayment_type
+        FROM
+            repayment_t
+        WHERE
+            borrow_id = #{id}
+        AND repayment_type IN (2, 4)
+        ORDER BY
+            id ASC
+        LIMIT 0, 1
+    </select>
+
+
+    <select id="queryRepaymentsAll" resultType="com.ps.domain.Repayment">
+        select * from repayment_t where repayment_type=4
+    </select>
+
+
+    <update id="updateRepaymentMoney">
+        update repayment_t set repayment_money=repayment_money+(select c.charge from config_t c where c.id=1) where id=#{id}
+    </update>
+
+
+    <select id="queryRepaymentByType" resultMap="queryRepaymentsResultMap">
+        SELECT
+            id,
+            repayment_money,
+            date_format(repayment_time,'%Y-%m-%d %H:%i:%S') repayment_time,
+            repayment_type,
+            borrow_id
+        FROM
+            repayment_t
+        WHERE
+            repayment_type = #{type}
+    </select>
+
+
+    <!--查询用户信息-->
+    <select id="queryUserInfoById" resultType="com.ps.domain.User">
+        SELECT
+            u.id,
+            u. NAME,
+            u.iphone,
+            u.identity_card,
+            u.bank_card
+        FROM
+            user_t u
+        WHERE
+            u.id = (
+                SELECT
+                    b.user_id
+                FROM
+                    borrow_money_t b
+                WHERE
+                    b.id = #{id}
+            )
+    </select>
+
+
+    <update id="updateAuditStatus">
+        update repayment_t set actual_repayment_time=now(),repayment_type=3 where id=#{id}
+    </update>
+
+    
+    <select id="queryRepaymentTypeById" resultType="com.ps.domain.Repayment">
+        select * from repayment_t where id=#{id}
+    </select>
+    
+</mapper>
